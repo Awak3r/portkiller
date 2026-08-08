@@ -68,14 +68,12 @@ PortKiller list
 
 ```bash
 PortKiller kill -port 5000
-PortKiller kill -port 8080 -f   # без подтверждения
 ```
 
 ### Убийство по имени
 
 ```bash
 PortKiller kill -name node
-PortKiller kill -name chrome -f
 ```
 
 ## Флаги
@@ -84,7 +82,6 @@ PortKiller kill -name chrome -f
 |------|----------|
 | `-port <число>` | Номер порта для убийства (1–65535) |
 | `-name <строка>` | Имя процесса (нечувствительно к регистру) |
-| `-f` / `--force` | Пропустить подтверждение |
 | `-h` / `--help` | Справка |
 | `-v` / `--version` | Версия |
 
