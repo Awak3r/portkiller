@@ -1,6 +1,6 @@
 version: 2
 
-project_name: portkiller
+project_name: PortKiller
 
 builds:
   - env: [CGO_ENABLED=0]
