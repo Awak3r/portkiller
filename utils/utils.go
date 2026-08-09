@@ -3,6 +3,8 @@ package utils
 import (
 	"log"
 	"sort"
+	"os"
+	"os/exec"
 	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/process"
 )
@@ -56,4 +58,22 @@ func Collect() []ProcessInfo{
     }
 	sort.Slice(processes, func(i, j int) bool { return processes[i].Port < processes[j].Port })
 	return processes
+}
+
+func EnsureRoot() {
+    if os.Geteuid() == 0 {
+        return
+    }
+    exe, err := os.Executable()
+    if err != nil {
+        os.Exit(1)
+    }
+    cmd := exec.Command("sudo", append([]string{exe}, os.Args[1:]...)...)
+    cmd.Stdin = os.Stdin
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    if err := cmd.Run(); err != nil {
+        os.Exit(1)
+    }
+    os.Exit(0)
 }
