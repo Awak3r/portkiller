@@ -1,11 +1,18 @@
 package version
 
-var (
-    Version = "dev"
-    Commit  = "none"
-    Date    = "unknown"
-)
+import "runtime/debug"
+
+var version = "dev"
 
 func Full() string {
-    return "PortKiller " + Version + " (" + Commit + ", " + Date + ")"
+    if version != "dev" { 
+        return version
+    }
+    if bi, ok := debug.ReadBuildInfo(); ok {
+        v := bi.Main.Version
+        if v != "" && v != "(devel)" {
+            return v 
+        }
+    }
+    return version
 }
