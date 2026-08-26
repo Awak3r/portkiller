@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	err := parser.ArgParse()
+	err := cli.ArgParse()
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
