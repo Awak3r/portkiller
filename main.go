@@ -1,12 +1,14 @@
 package main
 
 import (
+	"log"
+
 	"github.com/Awak3r/PortKiller/parser"
-	"github.com/Awak3r/PortKiller/utils"
 )
 
 func main() {
-	utils.EnsureRoot()
-	p := utils.Collect()
-	parser.ArgParse(p)
+	err := parser.ArgParse()
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
 }
