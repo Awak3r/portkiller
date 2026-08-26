@@ -1,38 +1,39 @@
+[English](README.md) | [Русский](README.ru.md)
 # PortKiller 🔪
 
-CLI-утилита для управления процессами через занятые порты. Кроссплатформенная, один бинарник без зависимостей.
+CLI utility for managing processes via occupied ports. Cross-platform, single binary with zero dependencies.
 
-## Возможности
+## Features
 
-- 📋 Просмотр всех занятых TCP-портов с указанием процесса
-- 💀 Убийство процесса по номеру порта
-- 🔍 Убийство процессов по имени (поддержка подстрок и регистра)
+- 📋 List all occupied TCP ports with process details
+- 💀 Kill a process by port number
+- 🔍 Kill processes by name (supports substrings, case-insensitive)
 
-## Установка
+## Installation
 
-### Способ 1: Через Go (рекомендуется)
+### Method 1: Via Go (Recommended)
 
-Требуется **Go 1.22+**:
+Requires **Go 1.22+**:
 
 ```bash
 go install github.com/Awak3r/PortKiller@latest
 ```
 
-Добавь Go-бинарники в PATH (одноразово):
+Add Go binaries to PATH (one-time setup):
 
 ```bash
-echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc   # или ~/.bashrc
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc   # or ~/.bashrc
 source ~/.zshrc
 ```
 
-### Способ 2: Готовые бинарники (без Go)
+### Method 2: Pre-built Binaries (No Go required)
 
-1. Перейди в [Releases](https://github.com/Awak3r/PortKiller/releases)
-2. Скачай архив под свою ОС:
+1. Go to [Releases](https://github.com/Awak3r/PortKiller/releases)
+2. Download the archive for your OS:
    - Linux: `portkiller-linux-amd64.tar.gz`
-   - macOS: `portkiller-darwin-arm64.tar.gz` (Apple Silicon) или `-amd64` (Intel)
+   - macOS: `portkiller-darwin-arm64.tar.gz` (Apple Silicon) or `-amd64` (Intel)
    - Windows: `portkiller-windows-amd64.zip`
-3. Распакуй и положи в директорию из PATH:
+3. Extract and move to a directory in your PATH:
 
 ```bash
 # Linux/macOS
@@ -40,10 +41,10 @@ sudo mv portkiller /usr/local/bin/
 sudo chmod +x /usr/local/bin/portkiller
 
 # Windows
-# Скопируй portkiller.exe в C:\Windows\ или добавь папку в PATH
+# Copy portkiller.exe to C:\Windows\ or add the folder to PATH
 ```
 
-### Способ 3: Сборка из исходников
+### Method 3: Building from Source
 
 ```bash
 git clone https://github.com/Awak3r/PortKiller.git
@@ -52,49 +53,48 @@ go build -o portkiller .
 sudo mv portkiller /usr/local/bin/
 ```
 
-## Использование
+## Usage
 
-> ⚠️ **Важно:** утилита требует прав администратора (sudo) — она автоматически попросит пароль при запуске.
+> ⚠️ **Important:** The utility requires administrator (sudo) privileges — it will automatically prompt for a password upon launch.
 
-### Список занятых портов
+### List Occupied Ports
 
 ```bash
 PortKiller list
 ```
 
-Выводит таблицу: `PORT | PID | NAME`
+Outputs a table: `PORT | PID | NAME`
 
-### Убийство по порту
+### Kill by Port
 
 ```bash
 PortKiller kill -port 5000
 ```
 
-### Убийство по имени
+### Kill by Name
 
 ```bash
 PortKiller kill -name node
 ```
 
-## Флаги
+## Flags
 
-| Флаг | Описание |
-|------|----------|
-| `-port <число>` | Номер порта для убийства (1–65535) |
-| `-name <строка>` | Имя процесса (нечувствительно к регистру) |
-| `-h` / `--help` | Справка |
-| `-v` / `--version` | Версия |
+| Flag | Description |
+|------|-------------|
+| `-port <number>` | Port number to kill (1–65535) |
+| `-name <string>` | Process name (case-insensitive) |
+| `-h` / `--help` | Show help |
+| `-v` / `--version` | Show version |
 
-## Примеры
+## Examples
 
 ```bash
-# Найти, кто занял порт 3000
+# Find who is using port 3000
 PortKiller list | grep 3000
 
-# Убить все Node-процессы
+# Kill all Node processes
 PortKiller kill -name node
 
-# Убить сервер разработки без вопросов
+# Kill the dev server without prompts
 PortKiller kill -port 3000 -f
 ```
-
