@@ -1,9 +1,9 @@
 package commands
 
-import ("fmt")
+import "fmt"
 
 func PrintUsage() {
-    fmt.Println(`PortKiller — kill процессов по имени/порту
+  fmt.Println(`portkiller — kill processes by name or port
 
 Usage:
   portkiller list [-name NAME | -port PORT]

@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
-	"github.com/Awak3r/PortKiller/utils"
+	"github.com/Awak3r/PortKiller/process"
 )
 
-func printTable(p []utils.ProcessInfo) {
+func printTable(p []process.ProcessInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
 	fmt.Fprintln(w, "PROCESS\tPORT\tPID")
     fmt.Fprintln(w, "-------\t----\t----")
@@ -18,22 +18,23 @@ func printTable(p []utils.ProcessInfo) {
 	w.Flush()
 }
 
-func ListAll(p []utils.ProcessInfo) {
+func ListAll(p []process.ProcessInfo) {
 	printTable(p)
 }
 
-func ListByName(name string, p []utils.ProcessInfo) {
-	res := []utils.ProcessInfo{}
+func ListByName(name string, p []process.ProcessInfo) {
+	res := []process.ProcessInfo{}
+	name = strings.ToLower(name)
 	for _, proc := range p {
-		if strings.HasPrefix(strings.ToLower(proc.Name),  strings.ToLower(name)) {
+		if strings.HasPrefix(strings.ToLower(proc.Name),  name) {
 			res = append(res, proc)
 		}
 	}
 	printTable(res)
 }
 
-func ListByPort(port int, p []utils.ProcessInfo) {
-	res := []utils.ProcessInfo{}
+func ListByPort(port int, p []process.ProcessInfo) {
+	res := []process.ProcessInfo{}
 	for _, proc := range p {
 		if port == proc.Port {
 			res = append(res, proc)

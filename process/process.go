@@ -1,8 +1,7 @@
-package utils
+package process
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"sort"
@@ -29,14 +28,14 @@ func KillByPid(pid int32) error {
 	return nil
 }
 
-func Collect() []ProcessInfo {
+func Collect() ([]ProcessInfo, error) {
 	EnsureRoot()
-	processes := []ProcessInfo{}
-	seen := make(map[struct{ pid, port int }]struct{})
 	conns, err := net.Connections("tcp4")
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to get network connections: %w", err)
 	}
+	seen := make(map[string]struct{})
+	var processes []ProcessInfo
 	for _, conn := range conns {
 		if conn.Status != "LISTEN" {
 			continue
@@ -51,16 +50,21 @@ func Collect() []ProcessInfo {
 		}
 		port := int(conn.Laddr.Port)
 		pid := int(conn.Pid)
-		k := struct{ pid, port int }{pid, port}
-		if _, dup := seen[k]; dup {
+		key := fmt.Sprintf("%d-%d", pid, port)
+		if _, dup := seen[key]; dup {
 			continue
 		}
-		seen[k] = struct{}{}
-		cur := ProcessInfo{Name: name, Pid: pid, Port: port}
-		processes = append(processes, cur)
+		seen[key] = struct{}{}
+		processes = append(processes, ProcessInfo{
+			Name: name,
+			Pid:  pid,
+			Port: port,
+		})
 	}
-	sort.Slice(processes, func(i, j int) bool { return processes[i].Port < processes[j].Port })
-	return processes
+	sort.Slice(processes, func(i, j int) bool {
+		return processes[i].Port < processes[j].Port
+	})
+	return processes, nil
 }
 
 func EnsureRoot() {

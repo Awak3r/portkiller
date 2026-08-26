@@ -1,6 +1,6 @@
 version: 2
 
-project_name: PortKiller
+project_name: portkiller
 
 builds:
   - env: [CGO_ENABLED=0]
@@ -8,9 +8,9 @@ builds:
     goarch: [amd64, arm64]
     ldflags:
       - -s -w
-      - -X PortKiller/internal/version.Version={{.Version}}
-      - -X PortKiller/internal/version.Commit={{.ShortCommit}}
-      - -X PortKiller/internal/version.Date={{.Date}}
+      - -X portkiller/internal/version.Version={{.Version}}
+      - -X portkiller/internal/version.Commit={{.ShortCommit}}
+      - -X portkiller/internal/version.Date={{.Date}}
 
 archives:
   - formats: [tar.gz]

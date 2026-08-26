@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/Awak3r/PortKiller/parser"
+	"github.com/Awak3r/PortKiller/cli"
 )
 
 func main() {
