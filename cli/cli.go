@@ -1,13 +1,11 @@
 package cli
 
 import (
-	"flag"
 	"fmt"
 	"os"
+	"strconv"
 
-	"github.com/Awak3r/PortKiller/commands"
-	"github.com/Awak3r/PortKiller/internal/version"
-	"github.com/Awak3r/PortKiller/process"
+	"github.com/shirou/gopsutil/v4/process"
 )
 
 func ArgParse() error {
@@ -21,55 +19,75 @@ func ArgParse() error {
 
 	case "--help", "-help", "-h":
 		commands.PrintUsage()
+		return nil
 
-	case "list":
-		proc, err := process.Collect()
-		if err != nil {
-			return fmt.Errorf("error listing processes: %w", err)
-		}
-		cmd := flag.NewFlagSet("list", flag.ExitOnError)
-		name := cmd.String("name", "", "process name")
-		port := cmd.Int("port", 0, "port")
-		cmd.Parse(os.Args[2:])
-
-		switch {
-		case *name != "":
-			commands.ListByName(*name, proc)
-		case *port != 0:
-			commands.ListByPort(*port, proc)
-		default:
-			commands.ListAll(proc)
-		}
-
-	case "kill":
-		proc, err := process.Collect()
-		if err != nil {
-			return fmt.Errorf("error listing processes: %w", err)
-		}
-		cmd := flag.NewFlagSet("kill", flag.ExitOnError)
-		name := cmd.String("name", "", "process name")
-		port := cmd.Int("port", 0, "port")
-		cmd.Parse(os.Args[2:])
-		switch {
-		case *name != "":
-			found, killed, err := commands.KillByName(*name, proc)
-			fmt.Printf("Found %d processes matching '%s'. Successfully terminated: %d\n", *name, found, killed)
-			if err != nil {
-				return fmt.Errorf("error terminating processes matching '%s': %w", *name, err)
-			}
-
-		case *port != 0:
-			found, killed, err := commands.KillByPort(*port, proc)
-			fmt.Printf("Found %d processes on port %d. Successfully terminated: %d\n", *port, found, killed)
-			if err != nil {
-				return fmt.Errorf("error terminating processes on port %d: %w", *port, err)
-			}
-		default:
-			fmt.Println("specify -name or -port")
-		}
 	default:
-		fmt.Println("unknown command:", os.Args[1])
-		commands.PrintUsage()
+		if len(os.Args) < 3 {
+			return fmt.Errorf("unknown argument %q, use --help for usage", os.Args[1])
+		}
+		switch os.Args[2] {
+		case "list":
+			p, err := process.Collect()
+			if err != nil {
+				return err
+			}
+			name := ""
+			port := 0
+			for i := 3; i < len(os.Args); i++ {
+				switch os.Args[i] {
+				case "-name":
+					i++
+					name = os.Args[i]
+				case "-port":
+					i++
+					port, _ = strconv.Atoi(os.Args[i])
+				}
+			}
+			if name != "" {
+				commands.ListByName(name, p)
+			} else if port != 0 {
+				commands.ListByPort(port, p)
+			} else {
+				commands.ListAll(p)
+			}
+			return nil
+
+		case "kill":
+			p, err := process.Collect()
+			if err != nil {
+				return err
+			}
+			name := ""
+			port := 0
+			for i := 3; i < len(os.Args); i++ {
+				switch os.Args[i] {
+				case "-name":
+					i++
+					name = os.Args[i]
+				case "-port":
+					i++
+					port, _ = strconv.Atoi(os.Args[i])
+				}
+			}
+			if name != "" {
+				found, killed, err := commands.KillByName(name, p)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("found %d process(es), killed %d\n", found, killed)
+			} else if port != 0 {
+				found, killed, err := commands.KillByPort(port, p)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("found %d process(es), killed %d\n", found, killed)
+			} else {
+				return fmt.Errorf("kill requires -name or -port")
+			}
+			return nil
+
+		default:
+			return fmt.Errorf("unknown command %q, use --help for usage", os.Args[2])
+		}
 	}
-	return nil
 }

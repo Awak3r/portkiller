@@ -2,7 +2,9 @@ module github.com/Awak3r/PortKiller
 
 go 1.26.5
 
-require github.com/shirou/gopsutil/v4 v4.26.7
+require (
+	github.com/shirou/gopsutil/v4 v4.26.7
+)
 
 require (
 	github.com/ebitengine/purego v0.10.2 // indirect
