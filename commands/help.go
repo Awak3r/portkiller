@@ -3,7 +3,7 @@ package commands
 import "fmt"
 
 func PrintUsage() {
-  fmt.Println(`portkiller — kill processes by name or port
+	fmt.Println(`portkiller — kill processes by name or port
 
 Usage:
   portkiller list [-name NAME | -port PORT]
