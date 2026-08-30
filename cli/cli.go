@@ -1,19 +1,21 @@
 package cli
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"io"
+
 	"github.com/Awak3r/PortKiller/commands"
 	"github.com/Awak3r/PortKiller/internal/version"
-	"os"
 )
 
-func ArgParse() error {
-	if len(os.Args) < 2 {
+func Run(args []string) error {
+	if len(args) < 2 {
 		fmt.Println("run with --help for usage")
 		return nil
 	}
-	switch os.Args[1] {
+	switch args[1] {
 	case "--version", "-v", "version":
 		fmt.Println(version.Full())
 		return nil
@@ -23,30 +25,40 @@ func ArgParse() error {
 		return nil
 
 	case "list":
-		return runList(os.Args[2:])
+		return runList(args[2:])
 
 	case "kill":
-		return runKill(os.Args[2:])
+		return runKill(args[2:])
 
 	default:
-		return fmt.Errorf("unknown command %q, use --help for usage", os.Args[1])
+		return fmt.Errorf("unknown command %q, use --help for usage", args[1])
 	}
 }
 
-func parseFlags(fs *flag.FlagSet, args []string) (map[string]bool, int, string) {
+func parseFlags(fs *flag.FlagSet, args []string) (map[string]bool, int, string, error) {
+	fs.SetOutput(io.Discard)
 	port := fs.Int("port", 0, "port to list")
 	name := fs.String("name", "", "name to list")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return nil, 0, "", err
+	}
 	var flagsSet = make(map[string]bool, 2)
 	fs.Visit(func(f *flag.Flag) {
 		flagsSet[f.Name] = true
 	})
-	return flagsSet, *port, *name
+	return flagsSet, *port, *name, nil
 }
 
 func runList(args []string) error {
-	fs := flag.NewFlagSet("list", flag.ExitOnError)
-	flagsSet, port, name := parseFlags(fs, args)
+	fs := flag.NewFlagSet("list", flag.ContinueOnError)
+	flagsSet, port, name, err := parseFlags(fs, args)
+	if err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			commands.PrintUsage()
+			return nil
+		}
+		return fmt.Errorf("list: %w", err)
+	}
 	if flagsSet["name"] && flagsSet["port"] {
 		return commands.ListByNameAndPort(name, port)
 	} else if flagsSet["name"] {
@@ -60,8 +72,15 @@ func runList(args []string) error {
 }
 
 func runKill(args []string) error {
-	fs := flag.NewFlagSet("kill", flag.ExitOnError)
-	flagsSet, port, name := parseFlags(fs, args)
+	fs := flag.NewFlagSet("kill", flag.ContinueOnError)
+	flagsSet, port, name, err := parseFlags(fs, args)
+	if err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			commands.PrintUsage()
+			return nil
+		}
+		return fmt.Errorf("kill: %w", err)
+	}
 	if flagsSet["name"] && flagsSet["port"] {
 		found, killed, err := commands.KillByNameAndPort(name, port)
 		if err != nil {

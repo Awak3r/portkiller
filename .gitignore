@@ -1,3 +1,4 @@
 dist/
 test/
-portkiller
+/portkiller
+cmd/portkiller/portkiller

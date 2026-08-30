@@ -1,14 +1,16 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"os"
 
 	"github.com/Awak3r/PortKiller/cli"
 )
 
 func main() {
-	err := cli.ArgParse()
+	err := cli.Run(os.Args)
 	if err != nil {
-		log.Fatalf("%v", err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
