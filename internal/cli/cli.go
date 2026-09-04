@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Awak3r/PortKiller/commands"
+	"github.com/Awak3r/PortKiller/internal/commands"
 	"github.com/Awak3r/PortKiller/internal/version"
 )
 
