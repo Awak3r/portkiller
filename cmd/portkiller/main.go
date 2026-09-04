@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Awak3r/PortKiller/cli"
+	"github.com/Awak3r/PortKiller/internal/cli"
 )
 
 func main() {

@@ -2,13 +2,13 @@ package commands
 
 import (
 	"fmt"
-	"github.com/Awak3r/PortKiller/process"
+	"github.com/Awak3r/PortKiller/internal/port"
 	"os"
 	"strings"
 	"text/tabwriter"
 )
 
-func printTable(p []process.ProcessInfo) {
+func printTable(p []port.ProcessInfo) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
 	fmt.Fprintln(w, "PROCESS\tPORT\tPID")
 	fmt.Fprintln(w, "-------\t----\t----")
@@ -19,7 +19,7 @@ func printTable(p []process.ProcessInfo) {
 }
 
 func ListAll() error {
-	p, err := process.Collect()
+	p, err := port.Collect()
 	if err != nil {
 		return err
 	}
@@ -28,11 +28,11 @@ func ListAll() error {
 }
 
 func ListByName(name string) error {
-	p, err := process.Collect()
+	p, err := port.Collect()
 	if err != nil {
 		return err
 	}
-	res := []process.ProcessInfo{}
+	res := []port.ProcessInfo{}
 	name = strings.ToLower(name)
 	for _, proc := range p {
 		if strings.HasPrefix(strings.ToLower(proc.Name), name) {
@@ -43,17 +43,17 @@ func ListByName(name string) error {
 	return nil
 }
 
-func ListByPort(port int) error {
-	if port < 1 || port > 65535 {
+func ListByPort(portNum int) error {
+	if portNum < 1 || portNum > 65535 {
 		return fmt.Errorf("invalid port (1-65535)")
 	}
-	p, err := process.Collect()
+	p, err := port.Collect()
 	if err != nil {
 		return err
 	}
-	res := []process.ProcessInfo{}
+	res := []port.ProcessInfo{}
 	for _, proc := range p {
-		if port == proc.Port {
+		if portNum == proc.Port {
 			res = append(res, proc)
 		}
 	}
@@ -61,18 +61,18 @@ func ListByPort(port int) error {
 	return nil
 }
 
-func ListByNameAndPort(name string, port int) error {
-	if port < 1 || port > 65535 {
+func ListByNameAndPort(name string, portNum int) error {
+	if portNum < 1 || portNum > 65535 {
 		return fmt.Errorf("invalid port (1-65535)")
 	}
-	p, err := process.Collect()
+	p, err := port.Collect()
 	if err != nil {
 		return err
 	}
-	res := []process.ProcessInfo{}
+	res := []port.ProcessInfo{}
 	name = strings.ToLower(name)
 	for _, proc := range p {
-		if strings.HasPrefix(strings.ToLower(proc.Name), name) && port == proc.Port {
+		if strings.HasPrefix(strings.ToLower(proc.Name), name) && portNum == proc.Port {
 			res = append(res, proc)
 		}
 	}
