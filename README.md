@@ -34,10 +34,10 @@ source ~/.zshrc
 
 ### Method 2: pre-built binaries
 
-Grab an archive from [Releases](https://github.com/Awak3r/PortKiller/releases) — currently Linux `amd64` / `arm64` (`portkiller-linux-*`), see the release assets for what is available. Extract and move to a directory in your `PATH`:
+Grab an archive from [Releases](https://github.com/Awak3r/PortKiller/releases) — currently Linux `amd64` / `arm64` archives named `portkiller_<version>_linux_<arch>.tar.gz`. Extract and move to a directory in your `PATH`:
 
 ```bash
-tar -xzf portkiller-linux-amd64.tar.gz
+tar -xzf portkiller_2.0.0_linux_amd64.tar.gz
 sudo mv portkiller /usr/local/bin/
 ```
 

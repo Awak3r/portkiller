@@ -34,10 +34,10 @@ source ~/.zshrc
 
 ### Способ 2: готовые бинарники
 
-Забери архив на [Releases](https://github.com/Awak3r/PortKiller/releases) — сейчас собираются Linux-бинарники `amd64` / `arm64` (`portkiller-linux-*`), точный список смотри в ассетах релиза. Распакуй и положи в директорию из `PATH`:
+Забери архив на [Releases](https://github.com/Awak3r/PortKiller/releases) — сейчас собираются Linux-архивы `portkiller_<версия>_linux_<арх>.tar.gz` для `amd64` / `arm64`. Распакуй и положи в директорию из `PATH`:
 
 ```bash
-tar -xzf portkiller-linux-amd64.tar.gz
+tar -xzf portkiller_2.0.0_linux_amd64.tar.gz
 sudo mv portkiller /usr/local/bin/
 ```
 
