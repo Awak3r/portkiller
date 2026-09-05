@@ -1,18 +1,18 @@
 package version
 
-import "runtime/debug"
+import "fmt"
 
-var version = "dev"
+var (
+	Version = "dev"
+	Commit  = "unknown"
+	Date    = "unknown"
+)
 
 func Full() string {
-	if version != "dev" {
-		return version
-	}
-	if bi, ok := debug.ReadBuildInfo(); ok {
-		v := bi.Main.Version
-		if v != "" && v != "(devel)" {
-			return v
-		}
-	}
-	return version
+	return fmt.Sprintf(
+		"%s (commit %s, built %s)",
+		Version,
+		Commit,
+		Date,
+	)
 }
