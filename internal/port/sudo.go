@@ -33,20 +33,18 @@ func RunAsRoot() error {
 	err = cmd.Run()
 
 	var exitErr *exec.ExitError
-	switch {
-	case errors.As(err, &exitErr):
+	if errors.As(err, &exitErr) {
 		code := exitErr.ExitCode()
 		if code < 0 {
 			code = 1
 		}
 		os.Exit(code)
-		fallthrough // unreachable: os.Exit never returns
-	case err != nil:
-		return fmt.Errorf("sudo: %w", err)
-	default:
-		os.Exit(0)
-		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("sudo: %w", err)
+	}
+	os.Exit(0)
+	return nil
 }
 
 func RequireRoot() error {

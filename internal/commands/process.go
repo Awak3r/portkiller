@@ -21,10 +21,10 @@ func printTable(w io.Writer, procs []ProcessInfo) {
 		w = os.Stdout
 	}
 	tab := tabwriter.NewWriter(w, 0, 8, 2, ' ', 0)
-	fmt.Fprintln(tab, "PROCESS\tPORT\tPID")
-	fmt.Fprintln(tab, "-------\t----\t----")
+	_, _ = fmt.Fprintln(tab, "PROCESS\tPORT\tPID")
+	_, _ = fmt.Fprintln(tab, "-------\t----\t----")
 	for _, proc := range procs {
-		fmt.Fprintf(tab, "%s\t%d\t%d\n", proc.Name, proc.Port, proc.Pid)
+		_, _ = fmt.Fprintf(tab, "%s\t%d\t%d\n", proc.Name, proc.Port, proc.Pid)
 	}
 	_ = tab.Flush()
 }
