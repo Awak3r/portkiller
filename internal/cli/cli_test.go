@@ -1,33 +1,41 @@
 package cli
 
 import (
-	"flag"
+	"bytes"
 	"strings"
 	"testing"
 )
 
-func TestRun(t *testing.T) {
+func execute(t *testing.T, args ...string) (string, error) {
+	t.Helper()
+	out := &bytes.Buffer{}
+	root := NewRootCmd()
+	root.SetOut(out)
+	root.SetErr(&bytes.Buffer{})
+	root.SetArgs(args)
+	err := root.Execute()
+	return out.String(), err
+}
+
+func TestExecute(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        []string
 		wantErr     bool
 		errContains string
-		blocked     bool
+		wantOut     string
 	}{
-		{"нет аргументов", []string{"app"}, false, "", false},
-		{"версия", []string{"app", "-v"}, false, "", false},
-		{"help", []string{"app", "--help"}, false, "", false},
-		{"неизвестная команда", []string{"app", "foo"}, true, "unknown command", false},
-		{"list без флагов", []string{"app", "list"}, false, "", true},
-		{"kill без флагов", []string{"app", "kill"}, true, "requires -name or -port", false},
+		{"версия", []string{"--version"}, false, "", "version"},
+		{"help", []string{"--help"}, false, "", "Usage:"},
+		{"неизвестная команда", []string{"foo"}, true, "unknown command", ""},
+		{"kill без флагов", []string{"kill"}, true, "kill requires -name or -port", ""},
+		{"list -port нечисловой", []string{"list", "--port", "abc"}, true, "invalid argument", ""},
+		{"kill -port нечисловой", []string{"kill", "--port", "abc"}, true, "invalid argument", ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.blocked {
-				t.Skip("blocked by EnsureRoot/Collect: os.Exit inside library code — unblocks in Step 4")
-			}
-			err := Run(tt.args)
+			out, err := execute(t, tt.args...)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("ошибка = %v, ожидалось wantErr = %v", err, tt.wantErr)
@@ -35,41 +43,17 @@ func TestRun(t *testing.T) {
 			if tt.wantErr && !strings.Contains(err.Error(), tt.errContains) {
 				t.Errorf("ошибка = %q, должна содержать %q", err, tt.errContains)
 			}
+			if tt.wantOut != "" && !strings.Contains(out, tt.wantOut) {
+				t.Errorf("вывод %q должен содержать %q", out, tt.wantOut)
+			}
 		})
 	}
 }
-func TestParseFlags(t *testing.T) {
-	tests := []struct {
-		name     string
-		args     []string
-		wantPort int
-		wantName string
-		wantErr  bool
-	}{
-		{"только порт", []string{"-port", "8080"}, 8080, "", false},
-		{"порт и имя", []string{"-name", "nginx", "-port", "80"}, 80, "nginx", false},
-		{"ошибка парсинга", []string{"-port", "abc"}, 0, "", true},
-	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fs := flag.NewFlagSet("test", flag.ContinueOnError)
-			flagsSet, port, name, err := parseFlags(fs, tt.args)
-
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("ошибка = %v, wantErr = %v", err, tt.wantErr)
-			}
-			if tt.wantErr {
-				return
-			}
-			if port != tt.wantPort || name != tt.wantName {
-				t.Errorf("получено port=%d, name=%q; ожидалось port=%d, name=%q",
-					port, name, tt.wantPort, tt.wantName)
-			}
-
-			if tt.args[0] == "-port" && !flagsSet["port"] {
-				t.Error("флаг port должен быть помечен как установленный")
-			}
-		})
+func TestExecuteListNoFlags(t *testing.T) {
+	t.Skip("blocked by EnsureRoot inside Collect: os.Exit inside library code — unblocks in план п.5/п.8")
+	_, err := execute(t, "list")
+	if err != nil {
+		t.Fatalf("ошибка = %v, ожидался nil", err)
 	}
 }
