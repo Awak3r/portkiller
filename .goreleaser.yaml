@@ -3,7 +3,8 @@ version: 2
 project_name: portkiller
 
 builds:
-  - env: [CGO_ENABLED=0]
+  - main: ./cmd/portkiller
+    env: [CGO_ENABLED=0]
     goos: [linux]
     goarch: [amd64, arm64]
     ldflags:

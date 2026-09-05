@@ -22,6 +22,9 @@ const (
 	killPollPeriod  = 100 * time.Millisecond
 )
 
+// KillByPid terminates a process in two stages: SIGTERM, then SIGKILL
+// after a grace period if the process is still alive. A process that
+// vanished (ESRCH) or became a zombie counts as terminated.
 func KillByPid(pid int32) error {
 	proc, err := process.NewProcess(pid)
 	if err != nil {
@@ -39,7 +42,8 @@ func KillByPid(pid int32) error {
 	deadline := time.Now().Add(killGracePeriod)
 	for time.Now().Before(deadline) {
 		time.Sleep(killPollPeriod)
-		if alive, err := proc.IsRunning(); err != nil || !alive {
+		alive, err := isAlive(proc)
+		if err != nil || !alive {
 			return nil
 		}
 	}
@@ -50,8 +54,25 @@ func KillByPid(pid int32) error {
 	return nil
 }
 
+// isAlive reports whether the process is still a running (non-zombie,
+// existing) process. Errors are surfaced so a transient /proc failure
+// is treated as "still alive" (conservative: leads to SIGKILL, never
+// to a false success report).
+func isAlive(proc *process.Process) (bool, error) {
+	statuses, err := proc.Status()
+	if err != nil {
+		return false, err
+	}
+	for _, s := range statuses {
+		if s == "Z" {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 func Collect() ([]ProcessInfo, error) {
-	conns, err := net.Connections("tcp4")
+	conns, err := net.Connections("tcp")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network connections: %w", err)
 	}
@@ -61,16 +82,23 @@ func Collect() ([]ProcessInfo, error) {
 		if conn.Status != "LISTEN" {
 			continue
 		}
-		p, err := process.NewProcess(conn.Pid)
-		if err != nil {
-			continue
-		}
-		name, err := p.Name()
-		if err != nil {
-			name = "unknown"
+		var name string
+		var pid int
+		if conn.Pid > 0 {
+			p, err := process.NewProcess(conn.Pid)
+			if err != nil {
+				continue
+			}
+			name, err = p.Name()
+			if err != nil {
+				name = "unknown"
+			}
+			pid = int(conn.Pid)
+		} else {
+			name = "-"
+			pid = 0
 		}
 		port := int(conn.Laddr.Port)
-		pid := int(conn.Pid)
 		key := fmt.Sprintf("%d-%d", pid, port)
 		if _, dup := seen[key]; dup {
 			continue
@@ -82,8 +110,11 @@ func Collect() ([]ProcessInfo, error) {
 			Port: port,
 		})
 	}
-	sort.Slice(processes, func(i, j int) bool {
-		return processes[i].Port < processes[j].Port
+	sort.SliceStable(processes, func(i, j int) bool {
+		if processes[i].Port != processes[j].Port {
+			return processes[i].Port < processes[j].Port
+		}
+		return processes[i].Pid < processes[j].Pid
 	})
 	return processes, nil
 }
