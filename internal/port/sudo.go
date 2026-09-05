@@ -66,9 +66,7 @@ func EnsureRoot() error {
 	if os.Geteuid() == 0 {
 		return nil
 	}
-	if err := RunAsRoot(); err != nil {
-		fmt.Fprintln(os.Stderr, "portkiller:", err)
-		os.Exit(1)
-	}
+	_ = RunAsRoot()
+	os.Exit(1)
 	return nil
 }
