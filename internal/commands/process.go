@@ -16,33 +16,6 @@ type ProcessInfo = port.ProcessInfo
 
 const killWorkers = 4
 
-func (f Filter) match(p ProcessInfo) bool {
-	if f.Name != "" && !NameMatches(p.Name, f.Name) {
-		return false
-	}
-	if f.Port != nil && p.Port != *f.Port {
-		return false
-	}
-	return true
-}
-
-func (f Filter) selectProcesses() ([]ProcessInfo, error) {
-	procs, err := f.collector.Collect()
-	if err != nil {
-		return nil, err
-	}
-	res := []ProcessInfo{}
-	for _, proc := range procs {
-		if f.match(proc) {
-			res = append(res, proc)
-		}
-	}
-	if len(res) == 0 {
-		return nil, ErrProcessNotFound
-	}
-	return res, nil
-}
-
 func printTable(w io.Writer, procs []ProcessInfo) {
 	if w == nil {
 		w = os.Stdout

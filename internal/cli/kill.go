@@ -31,6 +31,10 @@ func newKillCmd() *cobra.Command {
 				}
 			}
 
+			if !nameSet && !portSet {
+				return errKillRequiresFilter
+			}
+
 			var portPtr *int
 			if portSet {
 				portPtr = &portFlag
@@ -38,10 +42,6 @@ func newKillCmd() *cobra.Command {
 			filter, err := commands.NewFilter(name, portPtr)
 			if err != nil {
 				return err
-			}
-
-			if !nameSet && !portSet {
-				return errKillRequiresFilter
 			}
 
 			if dryRun {

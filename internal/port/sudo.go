@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	"golang.org/x/term"
 )
 
 var ErrNeedRoot = errors.New("root privileges required")
@@ -54,14 +56,12 @@ func RequireRoot() error {
 	return ErrNeedRoot
 }
 
-// HasTTY reports whether the process has a terminal attached, which
-// sudo needs to prompt for a password.
+// HasTTY reports whether a terminal is attached to any of the standard
+// streams, which sudo needs to prompt for a password.
 func HasTTY() bool {
-	fi, err := os.Stdin.Stat()
-	if err != nil {
-		return false
-	}
-	return fi.Mode()&os.ModeCharDevice != 0
+	return term.IsTerminal(int(os.Stdin.Fd())) ||
+		term.IsTerminal(int(os.Stdout.Fd())) ||
+		term.IsTerminal(int(os.Stderr.Fd()))
 }
 
 func EnsureRoot() error {

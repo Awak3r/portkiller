@@ -10,17 +10,23 @@ import (
 	"github.com/Awak3r/PortKiller/internal/port"
 )
 
-// Filter selects processes by name and/or port.
-// A nil Port means "not set"; zero values of Name mean "not set".
-// Collector and Killer are seams for tests; in production they are
-// backed by the port package.
+// Filter selects processes by name and/or port. Construct with
+// NewFilter; a zero value is not usable. A nil port means "not set".
 type Filter struct {
-	Name string
-	Port *int
-
+	name      string
+	port      *int
 	collector Collector
 	killer    Killer
 }
+
+// Option customizes Filter dependencies.
+type Option func(*Filter)
+
+// WithCollector overrides the process source (test seam).
+func WithCollector(c Collector) Option { return func(f *Filter) { f.collector = c } }
+
+// WithKiller overrides the terminator (test seam).
+func WithKiller(k Killer) Option { return func(f *Filter) { f.killer = k } }
 
 // Collector provides the snapshot of listening processes.
 type Collector interface {
@@ -32,29 +38,30 @@ type Killer interface {
 	KillByPid(pid int32) error
 }
 
-// collector is the production Collector.
 type prodCollector struct{}
 
 func (prodCollector) Collect() ([]port.ProcessInfo, error) { return port.Collect() }
 
-// prodKiller is the production Killer.
 type prodKiller struct{}
 
 func (prodKiller) KillByPid(pid int32) error { return port.KillByPid(pid) }
 
-// NewFilter validates the port when it is provided.
-func NewFilter(name string, port *int) (Filter, error) {
+// NewFilter validates the port when it is provided and applies options.
+func NewFilter(name string, port *int, opts ...Option) (Filter, error) {
 	if port != nil {
 		if err := ValidatePort(*port); err != nil {
 			return Filter{}, err
 		}
 	}
-	f := Filter{Name: name, Port: port, collector: prodCollector{}, killer: prodKiller{}}
+	f := Filter{name: name, port: port, collector: prodCollector{}, killer: prodKiller{}}
+	for _, opt := range opts {
+		opt(&f)
+	}
 	return f, nil
 }
 
-// List validates the filter and prints matching processes into w
-// (nil -> os.Stdout).
+// List prints matching processes into w (nil -> os.Stdout). No matches
+// is not an error: an empty table is printed.
 func (f Filter) List(w io.Writer) error {
 	procs, err := f.selectProcesses()
 	if err != nil {
@@ -64,13 +71,16 @@ func (f Filter) List(w io.Writer) error {
 	return nil
 }
 
-// Kill terminates matching processes with a worker pool.
-// Returns found/killed counts; partial failures are joined into one
-// error, but the stats are still reported.
+// Kill terminates matching processes with a worker pool. Returns
+// found/killed counts over actually dispatched processes; partial
+// failures are joined into one error, the stats are still reported.
 func (f Filter) Kill(ctx context.Context) (int, int, error) {
 	procs, err := f.selectProcesses()
 	if err != nil {
 		return 0, 0, err
+	}
+	if len(procs) == 0 {
+		return 0, 0, ErrProcessNotFound
 	}
 
 	jobs := make(chan ProcessInfo)
@@ -97,6 +107,7 @@ func (f Filter) Kill(ctx context.Context) (int, int, error) {
 		}()
 	}
 
+	sent := 0
 	for _, proc := range procs {
 		if proc.Pid <= 0 {
 			mu.Lock()
@@ -106,14 +117,39 @@ func (f Filter) Kill(ctx context.Context) (int, int, error) {
 		}
 		select {
 		case jobs <- proc:
+			sent++
 		case <-ctx.Done():
 			close(jobs)
 			wg.Wait()
-			return len(procs), killed, errors.Join(append(errs, ctx.Err())...)
+			return sent, killed, errors.Join(append(errs, ctx.Err())...)
 		}
 	}
 	close(jobs)
 	wg.Wait()
 
-	return len(procs), killed, errors.Join(errs...)
+	return sent, killed, errors.Join(errs...)
+}
+
+func (f Filter) match(p ProcessInfo) bool {
+	if f.name != "" && !NameMatches(p.Name, f.name) {
+		return false
+	}
+	if f.port != nil && p.Port != *f.port {
+		return false
+	}
+	return true
+}
+
+func (f Filter) selectProcesses() ([]ProcessInfo, error) {
+	procs, err := f.collector.Collect()
+	if err != nil {
+		return nil, err
+	}
+	res := []ProcessInfo{}
+	for _, proc := range procs {
+		if f.match(proc) {
+			res = append(res, proc)
+		}
+	}
+	return res, nil
 }
