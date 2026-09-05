@@ -23,8 +23,8 @@ type procFilter struct {
 
 func newFilter(name string, portNum int, portSet bool) (procFilter, error) {
 	if portSet {
-		if portNum < 1 || portNum > 65535 {
-			return procFilter{}, fmt.Errorf("invalid port (1-65535)")
+		if err := validatePort(portNum); err != nil {
+			return procFilter{}, err
 		}
 		return procFilter{name: name, port: portNum}, nil
 	}

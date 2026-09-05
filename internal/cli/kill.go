@@ -28,8 +28,10 @@ func newKillCmd() *cobra.Command {
 			nameSet := cmd.Flags().Changed("name")
 			portSet := cmd.Flags().Changed("port")
 
-			if portSet && (port < 1 || port > 65535) {
-				return fmt.Errorf("invalid port (1-65535)")
+			if portSet {
+				if err := commands.ValidatePort(port); err != nil {
+					return err
+				}
 			}
 
 			switch {
