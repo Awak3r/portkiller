@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"io"
 )
@@ -31,22 +32,22 @@ func ListByNameAndPort(w io.Writer, name string, portNum int) error {
 	return List(w, name, portNum, true)
 }
 
-func KillByName(name string) (int, int, error) {
-	return Kill(procFilter{name: name})
+func KillByName(ctx context.Context, name string) (int, int, error) {
+	return Kill(ctx, procFilter{name: name})
 }
 
-func KillByPort(portNum int) (int, int, error) {
+func KillByPort(ctx context.Context, portNum int) (int, int, error) {
 	f, err := newFilter("", portNum, true)
 	if err != nil {
 		return 0, 0, err
 	}
-	return Kill(f)
+	return Kill(ctx, f)
 }
 
-func KillByNameAndPort(name string, portNum int) (int, int, error) {
+func KillByNameAndPort(ctx context.Context, name string, portNum int) (int, int, error) {
 	f, err := newFilter(name, portNum, true)
 	if err != nil {
 		return 0, 0, err
 	}
-	return Kill(f)
+	return Kill(ctx, f)
 }

@@ -34,27 +34,29 @@ func newKillCmd() *cobra.Command {
 				}
 			}
 
+			ctx := cmd.Context()
+
 			switch {
 			case nameSet && portSet:
 				if err := escalate(); err != nil {
 					return err
 				}
-				return doKill(func() (int, int, error) {
-					return commands.KillByNameAndPort(name, port)
+				return doKill(cmd, func() (int, int, error) {
+					return commands.KillByNameAndPort(ctx, name, port)
 				})
 			case nameSet:
 				if err := escalate(); err != nil {
 					return err
 				}
-				return doKill(func() (int, int, error) {
-					return commands.KillByName(name)
+				return doKill(cmd, func() (int, int, error) {
+					return commands.KillByName(ctx, name)
 				})
 			case portSet:
 				if err := escalate(); err != nil {
 					return err
 				}
-				return doKill(func() (int, int, error) {
-					return commands.KillByPort(port)
+				return doKill(cmd, func() (int, int, error) {
+					return commands.KillByPort(ctx, port)
 				})
 			default:
 				return errKillRequiresFilter
@@ -81,10 +83,10 @@ func newKillCmd() *cobra.Command {
 	return cmd
 }
 
-func doKill(kill func() (int, int, error)) error {
+func doKill(cmd *cobra.Command, kill func() (int, int, error)) error {
 	found, killed, err := kill()
 	if found > 0 {
-		fmt.Printf("found %d process(es), killed %d\n", found, killed)
+		fmt.Fprintf(cmd.OutOrStdout(), "found %d process(es), killed %d\n", found, killed)
 	}
 	return err
 }
