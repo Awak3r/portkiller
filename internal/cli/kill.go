@@ -12,11 +12,13 @@ import (
 
 var errKillRequiresFilter = errors.New("kill requires -name or -port")
 
-// escalate re-runs the utility under sudo if the current process is not root.
+// escalate checks root privileges without side effects (review item 8):
+// a missing-privileges request is returned as an error and handled in
+// main, which is the only place allowed to os.Exit/exec sudo.
 // Called only from kill commands, after flag validation (review item 5):
 // an invalid port must fail before the user is asked for a password.
 func escalate() error {
-	return port.EnsureRoot()
+	return port.RequireRoot()
 }
 
 func newKillCmd() *cobra.Command {
