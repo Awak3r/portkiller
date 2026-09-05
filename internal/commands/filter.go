@@ -98,6 +98,12 @@ func (f Filter) Kill(ctx context.Context) (int, int, error) {
 	}
 
 	for _, proc := range procs {
+		if proc.Pid <= 0 {
+			mu.Lock()
+			errs = append(errs, fmt.Errorf("cannot kill process on port %d: owned by another user, rerun under sudo", proc.Port))
+			mu.Unlock()
+			continue
+		}
 		select {
 		case jobs <- proc:
 		case <-ctx.Done():

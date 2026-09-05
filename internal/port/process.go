@@ -3,6 +3,7 @@ package port
 import (
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"syscall"
 	"time"
@@ -33,7 +34,7 @@ func KillByPid(pid int32) error {
 
 	err = proc.Terminate()
 	if err != nil {
-		if errors.Is(err, syscall.ESRCH) {
+		if isProcessGone(err) {
 			return nil
 		}
 		return fmt.Errorf("failed to send SIGTERM to process %d: %w", pid, err)
@@ -48,10 +49,17 @@ func KillByPid(pid int32) error {
 		}
 	}
 
-	if err := proc.Kill(); err != nil && !errors.Is(err, syscall.ESRCH) {
+	if err := proc.Kill(); err != nil && !isProcessGone(err) {
 		return fmt.Errorf("process %d ignored SIGTERM and SIGKILL failed: %w", pid, err)
 	}
 	return nil
+}
+
+// isProcessGone reports whether the error means the process no longer
+// exists. os.ErrProcessDone is what os.Process.Signal returns for an
+// already-finished process; ESRCH covers direct syscall paths.
+func isProcessGone(err error) bool {
+	return errors.Is(err, os.ErrProcessDone) || errors.Is(err, syscall.ESRCH)
 }
 
 // isAlive reports whether the process is still a running (non-zombie,

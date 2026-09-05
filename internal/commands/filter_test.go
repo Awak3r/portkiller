@@ -128,6 +128,25 @@ func TestFilterKillAllSuccess(t *testing.T) {
 	}
 }
 
+func TestFilterKillForeignProcess(t *testing.T) {
+	collector := &fakeCollector{procs: []port.ProcessInfo{
+		{Name: "-", Pid: 0, Port: 53},
+		{Name: "a", Pid: 1, Port: 100},
+	}}
+	killer := &fakeKiller{}
+	f, _ := NewFilter("", nil)
+	f.collector = collector
+	f.killer = killer
+
+	found, killed, err := f.Kill(context.Background())
+	if found != 2 || killed != 1 {
+		t.Errorf("found/killed = %d/%d, want 2/1 (pid 0 must be skipped, not signaled)", found, killed)
+	}
+	if err == nil || !strings.Contains(err.Error(), "owned by another user") {
+		t.Errorf("err = %v, want foreign-process error", err)
+	}
+}
+
 func TestFilterKillContextCancelled(t *testing.T) {
 	collector := &fakeCollector{procs: []port.ProcessInfo{
 		{Name: "a", Pid: 1, Port: 100},
