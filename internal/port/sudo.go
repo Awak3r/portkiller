@@ -16,15 +16,16 @@ import (
 //
 // Управление в родительский процесс не возвращается никогда,
 // поэтому двойное выполнение команды (баг из ревью №1) невозможно.
-func EnsureRoot() {
+// Возвращает ошибку, только если перезапуск не удался (обёртка по сравнению
+// с немым os.Exit(1) — вызывающий решает, как её показать).
+func EnsureRoot() error {
 	if os.Geteuid() == 0 {
-		return
+		return nil
 	}
 
 	exe, err := os.Executable()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "portkiller: can't locate own executable:", err)
-		os.Exit(1)
+		return fmt.Errorf("can't locate own executable: %w", err)
 	}
 
 	cmd := exec.Command("sudo", append([]string{exe}, os.Args[1:]...)...)
@@ -43,10 +44,11 @@ func EnsureRoot() {
 			code = 1
 		}
 		os.Exit(code)
+		return nil // unreachable: os.Exit выше не возвращает
 	case err != nil:
-		fmt.Fprintln(os.Stderr, "portkiller: sudo failed:", err)
-		os.Exit(1)
+		return fmt.Errorf("sudo: %w", err)
 	default:
 		os.Exit(0)
+		return nil // unreachable
 	}
 }

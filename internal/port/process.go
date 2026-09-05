@@ -27,7 +27,6 @@ func KillByPid(pid int32) error {
 }
 
 func Collect() ([]ProcessInfo, error) {
-	EnsureRoot()
 	conns, err := net.Connections("tcp4")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get network connections: %w", err)
