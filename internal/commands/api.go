@@ -1,6 +1,9 @@
 package commands
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 // PrintUsage is kept for compatibility with the legacy help entry point.
 func PrintUsage() {
@@ -13,30 +16,22 @@ Usage:
   portkiller -help`)
 }
 
-// ---- list entry points ----
+// ---- list entry points (w = output writer, nil -> os.Stdout) ----
 
-func ListAll() error {
-	return List(procFilter{})
+func ListAll(w io.Writer) error {
+	return List(w, "", 0, false)
 }
 
-func ListByName(name string) error {
-	return List(procFilter{name: name})
+func ListByName(w io.Writer, name string) error {
+	return List(w, name, 0, false)
 }
 
-func ListByPort(portNum int) error {
-	f, err := newFilter("", portNum, true)
-	if err != nil {
-		return err
-	}
-	return List(f)
+func ListByPort(w io.Writer, portNum int) error {
+	return List(w, "", portNum, true)
 }
 
-func ListByNameAndPort(name string, portNum int) error {
-	f, err := newFilter(name, portNum, true)
-	if err != nil {
-		return err
-	}
-	return List(f)
+func ListByNameAndPort(w io.Writer, name string, portNum int) error {
+	return List(w, name, portNum, true)
 }
 
 // ---- kill entry points ----

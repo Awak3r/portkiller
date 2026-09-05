@@ -9,6 +9,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"text/tabwriter"
 
@@ -73,24 +74,35 @@ func (f procFilter) selectProcesses() ([]ProcessInfo, error) {
 	return res, nil
 }
 
-// printTable renders processes as an aligned PORT | PID | NAME table.
-func printTable(procs []ProcessInfo) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
-	fmt.Fprintln(w, "PROCESS\tPORT\tPID")
-	fmt.Fprintln(w, "-------\t----\t----")
-	for _, proc := range procs {
-		fmt.Fprintf(w, "%s\t%d\t%d\n", proc.Name, proc.Port, proc.Pid)
+// printTable renders processes as an aligned PORT | PID | NAME table
+// into w (or os.Stdout when w is nil).
+func printTable(w io.Writer, procs []ProcessInfo) {
+	if w == nil {
+		w = os.Stdout
 	}
-	w.Flush()
+	tab := tabwriter.NewWriter(w, 0, 8, 2, ' ', 0)
+	fmt.Fprintln(tab, "PROCESS\tPORT\tPID")
+	fmt.Fprintln(tab, "-------\t----\t----")
+	for _, proc := range procs {
+		fmt.Fprintf(tab, "%s\t%d\t%d\n", proc.Name, proc.Port, proc.Pid)
+	}
+	tab.Flush()
 }
 
-// List filters listening processes and prints them as a table.
-func List(filter procFilter) error {
+// List renders the table into w (or os.Stdout when w is nil) — the writer
+// is injected so tests can capture the output (review item 8).
+// List validates the port when explicitly set, filters listening processes
+// and prints them as a table into w (nil -> os.Stdout).
+func List(w io.Writer, name string, portNum int, portSet bool) error {
+	filter, err := newFilter(name, portNum, portSet)
+	if err != nil {
+		return err
+	}
 	procs, err := filter.selectProcesses()
 	if err != nil {
 		return err
 	}
-	printTable(procs)
+	printTable(w, procs)
 	return nil
 }
 

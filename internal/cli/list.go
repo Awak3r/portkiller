@@ -18,19 +18,20 @@ func newListCmd() *cobra.Command {
 			nameSet := cmd.Flags().Changed("name")
 			portSet := cmd.Flags().Changed("port")
 
+			// io.Writer от cobra: таблица попадает в тот же поток,
+			// что и весь вывод команды (и в тестовые буферы)
+			out := cmd.OutOrStdout()
+
 			if nameSet && portSet {
-				return commands.ListByNameAndPort(name, port)
+				return commands.ListByNameAndPort(out, name, port)
 			}
-
 			if nameSet {
-				return commands.ListByName(name)
+				return commands.ListByName(out, name)
 			}
-
 			if portSet {
-				return commands.ListByPort(port)
+				return commands.ListByPort(out, port)
 			}
-
-			return commands.ListAll()
+			return commands.ListAll(out)
 		},
 	}
 

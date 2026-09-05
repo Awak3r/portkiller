@@ -51,9 +51,15 @@ func TestExecute(t *testing.T) {
 }
 
 func TestExecuteListNoFlags(t *testing.T) {
-	t.Skip("blocked by EnsureRoot inside Collect: os.Exit inside library code — unblocks in план п.5/п.8")
-	_, err := execute(t, "list")
+	// unblocked in review item 8: escalation left library code,
+	// 'list' never touches sudo and is safe to run in tests
+	out, err := execute(t, "list")
 	if err != nil {
 		t.Fatalf("ошибка = %v, ожидался nil", err)
+	}
+	for _, want := range []string{"PROCESS", "PORT", "PID"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("вывод %q должен содержать заголовок таблицы %q", out, want)
+		}
 	}
 }
