@@ -11,7 +11,7 @@ builds:
       - -s -w
       - -X github.com/Awak3r/PortKiller/internal/version.Version={{.Version}}
       - -X github.com/Awak3r/PortKiller/internal/version.Commit={{.ShortCommit}}
-      - -X github.com/Awak3r/PortKiller/internal/version.Date={{ time "2006-01-02" .Date }}
+      - -X github.com/Awak3r/PortKiller/internal/version.Date={{ time "2006-01-02" }}
 
 archives:
   - formats: [tar.gz]
