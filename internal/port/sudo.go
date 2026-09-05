@@ -44,7 +44,7 @@ func RunAsRoot() error {
 		return fmt.Errorf("sudo: %w", err)
 	}
 	os.Exit(0)
-	return nil
+	panic("unreachable")
 }
 
 func RequireRoot() error {
