@@ -40,7 +40,7 @@ func RunAsRoot() error {
 			code = 1
 		}
 		os.Exit(code)
-		return nil
+		fallthrough // unreachable: os.Exit never returns
 	case err != nil:
 		return fmt.Errorf("sudo: %w", err)
 	default:

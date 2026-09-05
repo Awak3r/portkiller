@@ -68,7 +68,9 @@ func newKillCmd() *cobra.Command {
 func doKill(cmd *cobra.Command, kill func() (int, int, error)) error {
 	found, killed, err := kill()
 	if found > 0 {
-		fmt.Fprintf(cmd.OutOrStdout(), "found %d process(es), killed %d\n", found, killed)
+		if _, werr := fmt.Fprintf(cmd.OutOrStdout(), "found %d process(es), killed %d\n", found, killed); werr != nil {
+			return werr
+		}
 	}
 	return err
 }

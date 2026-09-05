@@ -26,5 +26,5 @@ func printTable(w io.Writer, procs []ProcessInfo) {
 	for _, proc := range procs {
 		fmt.Fprintf(tab, "%s\t%d\t%d\n", proc.Name, proc.Port, proc.Pid)
 	}
-	tab.Flush()
+	_ = tab.Flush()
 }
