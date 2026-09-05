@@ -27,7 +27,7 @@ func (f Filter) match(p ProcessInfo) bool {
 }
 
 func (f Filter) selectProcesses() ([]ProcessInfo, error) {
-	procs, err := port.Collect()
+	procs, err := f.collector.Collect()
 	if err != nil {
 		return nil, err
 	}

@@ -12,10 +12,35 @@ import (
 
 // Filter selects processes by name and/or port.
 // A nil Port means "not set"; zero values of Name mean "not set".
+// Collector and Killer are seams for tests; in production they are
+// backed by the port package.
 type Filter struct {
 	Name string
 	Port *int
+
+	collector Collector
+	killer    Killer
 }
+
+// Collector provides the snapshot of listening processes.
+type Collector interface {
+	Collect() ([]port.ProcessInfo, error)
+}
+
+// Killer terminates a process by pid.
+type Killer interface {
+	KillByPid(pid int32) error
+}
+
+// collector is the production Collector.
+type prodCollector struct{}
+
+func (prodCollector) Collect() ([]port.ProcessInfo, error) { return port.Collect() }
+
+// prodKiller is the production Killer.
+type prodKiller struct{}
+
+func (prodKiller) KillByPid(pid int32) error { return port.KillByPid(pid) }
 
 // NewFilter validates the port when it is provided.
 func NewFilter(name string, port *int) (Filter, error) {
@@ -24,7 +49,8 @@ func NewFilter(name string, port *int) (Filter, error) {
 			return Filter{}, err
 		}
 	}
-	return Filter{Name: name, Port: port}, nil
+	f := Filter{Name: name, Port: port, collector: prodCollector{}, killer: prodKiller{}}
+	return f, nil
 }
 
 // List validates the filter and prints matching processes into w
@@ -58,7 +84,7 @@ func (f Filter) Kill(ctx context.Context) (int, int, error) {
 		go func() {
 			defer wg.Done()
 			for proc := range jobs {
-				if err := port.KillByPid(int32(proc.Pid)); err != nil {
+				if err := f.killer.KillByPid(int32(proc.Pid)); err != nil {
 					mu.Lock()
 					errs = append(errs, fmt.Errorf("failed to kill process %s (PID: %d): %w", proc.Name, proc.Pid, err))
 					mu.Unlock()
