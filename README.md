@@ -105,6 +105,12 @@ sudo portkiller kill --name node
 
 Matches every process whose name contains `node` (case-insensitive) — `node`, `NODE`, `my-node-app`.
 
+Not sure? Preview first — no root, no kill:
+
+```bash
+portkiller kill --dry-run --name node
+```
+
 ### Kill by name and port
 
 ```bash
@@ -126,6 +132,7 @@ Both conditions must match at once.
 |---------------------|------------|-------------|
 | `--port` / `-p`     | `list`, `kill` | TCP port, integer 1–65535 |
 | `--name` / `-n`     | `list`, `kill` | Process name, case-insensitive substring |
+| `--dry-run`         | `kill`        | Show what would be killed (same table as `list`), without killing and without sudo |
 | `--help` / `-h`     | everywhere | Help |
 | `--version` / `-v`  | root command | Version: `portkiller version X (commit Y, built Z)` |
 
@@ -136,7 +143,10 @@ Validation: an invalid port (`portkiller kill --port 70000`) fails **immediately
 - **`list` does not require root.** Reading the TCP table is available to any user (you may see fewer details for processes owned by other users, but ports and PIDs are shown).
 - **`kill` requires root** to send signals to processes you don't own. When you run `portkiller kill ...` as a regular user:
   1. your flags are validated first (invalid port → error, no password asked);
-  2. the tool re-executes itself under `sudo` and asks for your password;
+  2. the tool re-executes itself under `sudo` (by its current binary path —
+     keep the binary in a root-owned directory like `/usr/local/bin`) and asks
+     for your password; without a terminal attached it exits with a clear
+     message instead of sudo's cryptic one;
   3. the child's exit code is propagated back, so scripts can rely on it.
 - Run it directly under root/sudo if you prefer: `sudo portkiller kill --name nginx`.
 

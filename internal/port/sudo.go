@@ -54,6 +54,16 @@ func RequireRoot() error {
 	return ErrNeedRoot
 }
 
+// HasTTY reports whether the process has a terminal attached, which
+// sudo needs to prompt for a password.
+func HasTTY() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice != 0
+}
+
 func EnsureRoot() error {
 	if os.Geteuid() == 0 {
 		return nil

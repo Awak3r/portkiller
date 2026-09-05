@@ -15,6 +15,10 @@ func main() {
 		return
 	}
 	if errors.Is(err, port.ErrNeedRoot) {
+		if !port.HasTTY() {
+			fmt.Fprintln(os.Stderr, "root privileges required to kill processes: run inside a terminal so sudo can ask for a password, or run the command under sudo directly")
+			os.Exit(1)
+		}
 		if escErr := port.EnsureRoot(); escErr != nil {
 			fmt.Fprintln(os.Stderr, escErr)
 			os.Exit(1)
