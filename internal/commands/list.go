@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Awak3r/PortKiller/internal/port"
 	"os"
-	"strings"
 	"text/tabwriter"
 )
 
@@ -33,9 +32,8 @@ func ListByName(name string) error {
 		return err
 	}
 	res := []port.ProcessInfo{}
-	name = strings.ToLower(name)
 	for _, proc := range p {
-		if strings.HasPrefix(strings.ToLower(proc.Name), name) {
+		if NameMatches(proc.Name, name) {
 			res = append(res, proc)
 		}
 	}
@@ -70,9 +68,8 @@ func ListByNameAndPort(name string, portNum int) error {
 		return err
 	}
 	res := []port.ProcessInfo{}
-	name = strings.ToLower(name)
 	for _, proc := range p {
-		if strings.HasPrefix(strings.ToLower(proc.Name), name) && portNum == proc.Port {
+		if NameMatches(proc.Name, name) && portNum == proc.Port {
 			res = append(res, proc)
 		}
 	}

@@ -82,7 +82,7 @@ PortKiller kill -name node
 | Flag | Description |
 |------|-------------|
 | `-port <number>` | Port number to kill (1–65535) |
-| `-name <string>` | Process name (case-insensitive) |
+| `-name <string>` | Process name (substring, case-insensitive) |
 | `-h` / `--help` | Show help |
 | `-v` / `--version` | Show version |
 

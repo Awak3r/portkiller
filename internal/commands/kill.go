@@ -3,7 +3,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/Awak3r/PortKiller/internal/port"
 )
@@ -19,7 +18,7 @@ func KillByName(name string) (int, int, error) {
 	killed := 0
 	var errs []error
 	for _, proc := range p {
-		if strings.EqualFold(proc.Name, name) {
+		if NameMatches(proc.Name, name) {
 			found++
 			err := port.KillByPid(int32(proc.Pid))
 			if err != nil {
@@ -75,7 +74,7 @@ func KillByNameAndPort(name string, portNum int) (int, int, error) {
 	killed := 0
 	var errs []error
 	for _, proc := range p {
-		if strings.EqualFold(proc.Name, name) && portNum == proc.Port {
+		if NameMatches(proc.Name, name) && portNum == proc.Port {
 			found++
 			err := port.KillByPid(int32(proc.Pid))
 			if err != nil {
