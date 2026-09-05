@@ -51,8 +51,6 @@ func TestExecute(t *testing.T) {
 }
 
 func TestExecuteListNoFlags(t *testing.T) {
-	// unblocked in review item 8: escalation left library code,
-	// 'list' never touches sudo and is safe to run in tests
 	out, err := execute(t, "list")
 	if err != nil {
 		t.Fatalf("ошибка = %v, ожидался nil", err)

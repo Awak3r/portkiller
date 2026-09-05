@@ -14,7 +14,7 @@ func TestNameMatches(t *testing.T) {
 		{"nginx", "NGINX", true},
 		{"node", "nginx", false},
 		{"", "ngin", false},
-		{"nginx", "", true}, // пустой шаблон матчит всё — отсекается на уровне флагов
+		{"nginx", "", true},
 	}
 
 	for _, tt := range tests {

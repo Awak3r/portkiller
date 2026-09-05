@@ -5,7 +5,6 @@ import (
 	"io"
 )
 
-// PrintUsage is kept for compatibility with the legacy help entry point.
 func PrintUsage() {
 	fmt.Println(`portkiller — kill processes by name or port
 
@@ -15,8 +14,6 @@ Usage:
   portkiller -version
   portkiller -help`)
 }
-
-// ---- list entry points (w = output writer, nil -> os.Stdout) ----
 
 func ListAll(w io.Writer) error {
 	return List(w, "", 0, false)
@@ -33,8 +30,6 @@ func ListByPort(w io.Writer, portNum int) error {
 func ListByNameAndPort(w io.Writer, name string, portNum int) error {
 	return List(w, name, portNum, true)
 }
-
-// ---- kill entry points ----
 
 func KillByName(name string) (int, int, error) {
 	return Kill(procFilter{name: name})

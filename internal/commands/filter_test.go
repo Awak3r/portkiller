@@ -40,7 +40,6 @@ func TestNewFilterValidation(t *testing.T) {
 	if _, err := newFilter("nginx", 8080, true); err != nil {
 		t.Errorf("валидный порт не должен давать ошибку: %v", err)
 	}
-	// имя-фильтр без порта — валидация не нужна
 	if _, err := newFilter("nginx", 0, false); err != nil {
 		t.Errorf("фильтр по имени не должен давать ошибку: %v", err)
 	}

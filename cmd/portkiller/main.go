@@ -15,12 +15,11 @@ func main() {
 		return
 	}
 	if errors.Is(err, port.ErrNeedRoot) {
-		// единственное законное место os.Exit: эскалация заменяет процесс
 		if escErr := port.EnsureRoot(); escErr != nil {
 			fmt.Fprintln(os.Stderr, escErr)
 			os.Exit(1)
 		}
-		return // unreachable: EnsureRoot either exits or replaces the process
+		return
 	}
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)

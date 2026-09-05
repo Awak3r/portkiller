@@ -1,9 +1,3 @@
-// Package commands implements the actions behind the portkiller CLI:
-// filtering listening processes (list) and terminating them (kill).
-//
-// Both commands share a single pipeline: Collect -> filter -> action.
-// Name matching is case-insensitive substring (NameMatches);
-// port is a 1-65535 integer validated before any sudo escalation.
 package commands
 
 import (
@@ -16,23 +10,17 @@ import (
 	"github.com/Awak3r/PortKiller/internal/port"
 )
 
-// ErrProcessNotFound is returned when no listening process matches the filter.
 var ErrProcessNotFound = errors.New("process not found")
 
-// ProcessInfo re-exported for callers of this package.
 type ProcessInfo = port.ProcessInfo
 
-// Collect proxies the port package so callers keep a single import.
 func Collect() ([]ProcessInfo, error) { return port.Collect() }
 
-// procFilter selects processes by name and/or port.
-// Zero values mean "no constraint" for the corresponding field.
 type procFilter struct {
 	name string
 	port int
 }
 
-// newFilter validates the port up front and builds a filter.
 func newFilter(name string, portNum int, portSet bool) (procFilter, error) {
 	if portSet {
 		if portNum < 1 || portNum > 65535 {
@@ -43,8 +31,6 @@ func newFilter(name string, portNum int, portSet bool) (procFilter, error) {
 	return procFilter{name: name}, nil
 }
 
-// match reports whether the process satisfies the filter
-// (NameMatches semantics — review item 4).
 func (f procFilter) match(p ProcessInfo) bool {
 	if f.name != "" && !NameMatches(p.Name, f.name) {
 		return false
@@ -55,8 +41,6 @@ func (f procFilter) match(p ProcessInfo) bool {
 	return true
 }
 
-// select runs the collection pipeline shared by list and kill.
-// Returns ErrProcessNotFound (nil slice) when nothing matches.
 func (f procFilter) selectProcesses() ([]ProcessInfo, error) {
 	procs, err := port.Collect()
 	if err != nil {
@@ -74,8 +58,6 @@ func (f procFilter) selectProcesses() ([]ProcessInfo, error) {
 	return res, nil
 }
 
-// printTable renders processes as an aligned PORT | PID | NAME table
-// into w (or os.Stdout when w is nil).
 func printTable(w io.Writer, procs []ProcessInfo) {
 	if w == nil {
 		w = os.Stdout
@@ -89,10 +71,6 @@ func printTable(w io.Writer, procs []ProcessInfo) {
 	tab.Flush()
 }
 
-// List renders the table into w (or os.Stdout when w is nil) — the writer
-// is injected so tests can capture the output (review item 8).
-// List validates the port when explicitly set, filters listening processes
-// and prints them as a table into w (nil -> os.Stdout).
 func List(w io.Writer, name string, portNum int, portSet bool) error {
 	filter, err := newFilter(name, portNum, portSet)
 	if err != nil {
@@ -106,9 +84,6 @@ func List(w io.Writer, name string, portNum int, portSet bool) error {
 	return nil
 }
 
-// Kill filters listening processes and terminates each of them.
-// Returns found/killed counts; partial failures are joined into one error,
-// but the stats are still reported (review item 6).
 func Kill(filter procFilter) (int, int, error) {
 	procs, err := filter.selectProcesses()
 	if err != nil {

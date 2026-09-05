@@ -12,11 +12,6 @@ import (
 
 var errKillRequiresFilter = errors.New("kill requires -name or -port")
 
-// escalate checks root privileges without side effects (review item 8):
-// a missing-privileges request is returned as an error and handled in
-// main, which is the only place allowed to os.Exit/exec sudo.
-// Called only from kill commands, after flag validation (review item 5):
-// an invalid port must fail before the user is asked for a password.
 func escalate() error {
 	return port.RequireRoot()
 }
@@ -33,7 +28,6 @@ func newKillCmd() *cobra.Command {
 			nameSet := cmd.Flags().Changed("name")
 			portSet := cmd.Flags().Changed("port")
 
-			// валидация до эскалации: невалидный порт не должен спрашивать пароль
 			if portSet && (port < 1 || port > 65535) {
 				return fmt.Errorf("invalid port (1-65535)")
 			}
@@ -85,8 +79,6 @@ func newKillCmd() *cobra.Command {
 	return cmd
 }
 
-// doKill runs the kill function and reports found/killed stats
-// even when some kills failed (partial success).
 func doKill(kill func() (int, int, error)) error {
 	found, killed, err := kill()
 	if found > 0 {
