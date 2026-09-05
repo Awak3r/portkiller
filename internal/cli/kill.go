@@ -10,14 +10,10 @@ import (
 	"github.com/Awak3r/PortKiller/internal/port"
 )
 
-var errKillRequiresFilter = errors.New("kill requires -name or -port")
-
-func escalate() error {
-	return port.RequireRoot()
-}
+var errKillRequiresFilter = errors.New("kill requires --name or --port")
 
 func newKillCmd() *cobra.Command {
-	var port int
+	var portFlag int
 	var name string
 
 	cmd := &cobra.Command{
@@ -29,56 +25,36 @@ func newKillCmd() *cobra.Command {
 			portSet := cmd.Flags().Changed("port")
 
 			if portSet {
-				if err := commands.ValidatePort(port); err != nil {
+				if err := commands.ValidatePort(portFlag); err != nil {
 					return err
 				}
 			}
 
-			ctx := cmd.Context()
+			var portPtr *int
+			if portSet {
+				portPtr = &portFlag
+			}
+			filter, err := commands.NewFilter(name, portPtr)
+			if err != nil {
+				return err
+			}
 
-			switch {
-			case nameSet && portSet:
-				if err := escalate(); err != nil {
-					return err
-				}
-				return doKill(cmd, func() (int, int, error) {
-					return commands.KillByNameAndPort(ctx, name, port)
-				})
-			case nameSet:
-				if err := escalate(); err != nil {
-					return err
-				}
-				return doKill(cmd, func() (int, int, error) {
-					return commands.KillByName(ctx, name)
-				})
-			case portSet:
-				if err := escalate(); err != nil {
-					return err
-				}
-				return doKill(cmd, func() (int, int, error) {
-					return commands.KillByPort(ctx, port)
-				})
-			default:
+			if !nameSet && !portSet {
 				return errKillRequiresFilter
 			}
+
+			if err := port.RequireRoot(); err != nil {
+				return err
+			}
+
+			return doKill(cmd, func() (int, int, error) {
+				return filter.Kill(cmd.Context())
+			})
 		},
 	}
 
-	cmd.Flags().IntVarP(
-		&port,
-		"port",
-		"p",
-		0,
-		"port to kill by",
-	)
-
-	cmd.Flags().StringVarP(
-		&name,
-		"name",
-		"n",
-		"",
-		"process name to kill by",
-	)
+	cmd.Flags().IntVarP(&portFlag, "port", "p", 0, "port to kill by")
+	cmd.Flags().StringVarP(&name, "name", "n", "", "process name to kill by")
 
 	return cmd
 }

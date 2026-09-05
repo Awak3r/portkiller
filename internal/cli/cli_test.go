@@ -28,7 +28,7 @@ func TestExecute(t *testing.T) {
 		{"версия", []string{"--version"}, false, "", "version"},
 		{"help", []string{"--help"}, false, "", "Usage:"},
 		{"неизвестная команда", []string{"foo"}, true, "unknown command", ""},
-		{"kill без флагов", []string{"kill"}, true, "kill requires -name or -port", ""},
+		{"kill без флагов", []string{"kill"}, true, "kill requires --name or --port", ""},
 		{"list -port нечисловой", []string{"list", "--port", "abc"}, true, "invalid argument", ""},
 		{"kill -port нечисловой", []string{"kill", "--port", "abc"}, true, "invalid argument", ""},
 	}

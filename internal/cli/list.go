@@ -7,7 +7,7 @@ import (
 )
 
 func newListCmd() *cobra.Command {
-	var port int
+	var portFlag int
 	var name string
 
 	cmd := &cobra.Command{
@@ -15,39 +15,28 @@ func newListCmd() *cobra.Command {
 		Short: "List processes",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			nameSet := cmd.Flags().Changed("name")
 			portSet := cmd.Flags().Changed("port")
 
-			out := cmd.OutOrStdout()
-
-			if nameSet && portSet {
-				return commands.ListByNameAndPort(out, name, port)
-			}
-			if nameSet {
-				return commands.ListByName(out, name)
-			}
 			if portSet {
-				return commands.ListByPort(out, port)
+				if err := commands.ValidatePort(portFlag); err != nil {
+					return err
+				}
 			}
-			return commands.ListAll(out)
+
+			var portPtr *int
+			if portSet {
+				portPtr = &portFlag
+			}
+			filter, err := commands.NewFilter(name, portPtr)
+			if err != nil {
+				return err
+			}
+			return filter.List(cmd.OutOrStdout())
 		},
 	}
 
-	cmd.Flags().IntVarP(
-		&port,
-		"port",
-		"p",
-		0,
-		"port to list",
-	)
-
-	cmd.Flags().StringVarP(
-		&name,
-		"name",
-		"n",
-		"",
-		"name to list",
-	)
+	cmd.Flags().IntVarP(&portFlag, "port", "p", 0, "port to list")
+	cmd.Flags().StringVarP(&name, "name", "n", "", "name to list")
 
 	return cmd
 }

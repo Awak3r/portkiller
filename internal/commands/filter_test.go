@@ -2,22 +2,24 @@ package commands
 
 import "testing"
 
-func TestProcFilterMatch(t *testing.T) {
+func TestFilterMatch(t *testing.T) {
+	port80 := 80
+	port443 := 443
 	tests := []struct {
 		name     string
-		filter   procFilter
+		filter   Filter
 		procName string
 		procPort int
 		want     bool
 	}{
-		{"пустой фильтр матчит всё", procFilter{}, "nginx", 80, true},
-		{"имя подстрокой", procFilter{name: "ngin"}, "nginx", 80, true},
-		{"имя регистронезависимо", procFilter{name: "NGIN"}, "nginx", 80, true},
-		{"имя не совпало", procFilter{name: "node"}, "nginx", 80, false},
-		{"порт совпал", procFilter{port: 80}, "nginx", 80, true},
-		{"порт не совпал", procFilter{port: 443}, "nginx", 80, false},
-		{"имя+порт ок", procFilter{name: "nginx", port: 80}, "nginx", 80, true},
-		{"имя+порт порт мимо", procFilter{name: "nginx", port: 443}, "nginx", 80, false},
+		{"empty filter matches all", Filter{}, "nginx", 80, true},
+		{"name substring", Filter{Name: "ngin"}, "nginx", 80, true},
+		{"name case-insensitive", Filter{Name: "NGIN"}, "nginx", 80, true},
+		{"name mismatch", Filter{Name: "node"}, "nginx", 80, false},
+		{"port match", Filter{Port: &port80}, "nginx", 80, true},
+		{"port mismatch", Filter{Port: &port443}, "nginx", 80, false},
+		{"name+port ok", Filter{Name: "nginx", Port: &port80}, "nginx", 80, true},
+		{"name+port port off", Filter{Name: "nginx", Port: &port443}, "nginx", 80, false},
 	}
 
 	for _, tt := range tests {
@@ -31,16 +33,20 @@ func TestProcFilterMatch(t *testing.T) {
 }
 
 func TestNewFilterValidation(t *testing.T) {
-	if _, err := newFilter("", 70000, true); err == nil {
-		t.Error("порт 70000 должен давать ошибку")
+	bad := 70000
+	zero := 0
+	good := 8080
+
+	if _, err := NewFilter("", &bad); err == nil {
+		t.Error("port 70000 must be rejected")
 	}
-	if _, err := newFilter("", 0, true); err == nil {
-		t.Error("порт 0 при явном -port должен давать ошибку")
+	if _, err := NewFilter("", &zero); err == nil {
+		t.Error("explicit port 0 must be rejected")
 	}
-	if _, err := newFilter("nginx", 8080, true); err != nil {
-		t.Errorf("валидный порт не должен давать ошибку: %v", err)
+	if _, err := NewFilter("nginx", &good); err != nil {
+		t.Errorf("valid port must not fail: %v", err)
 	}
-	if _, err := newFilter("nginx", 0, false); err != nil {
-		t.Errorf("фильтр по имени не должен давать ошибку: %v", err)
+	if _, err := NewFilter("nginx", nil); err != nil {
+		t.Errorf("name-only filter must not fail: %v", err)
 	}
 }
